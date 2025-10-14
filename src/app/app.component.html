@@ -1,0 +1,30 @@
+<main class="container p-5">
+    <h2 class="mb-5">
+        To Dos List
+    </h2>
+    <div class="row g-3">
+        @if(hasError()) {
+            <div class="alert alert-danger w-100">
+                {{errorMessage()}}
+            </div>
+
+        } @else {
+            @for (item of toDosList(); track $index) {
+            <div class="col-sm-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h4 class="card-title">
+                                {{item.title}}
+                            </h4>
+                            <i class="fa"
+                             [ngClass]="{'fa-check text-success': item?.completed , 'fa-times text-danger' : !item?.completed}">
+                            </i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        }
+    </div>
+</main>
