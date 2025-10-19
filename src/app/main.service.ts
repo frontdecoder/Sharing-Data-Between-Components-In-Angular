@@ -11,6 +11,6 @@ export class MainService {
     ) { }
 
     getToDoList() {
-        return this.http.get('https://jsonplaceholder.typicode.com/todos1111?_limit=10')
+        return this.http.get('https://jsonplaceholder.typicode.com/todos?_limit=10')
     }
 }

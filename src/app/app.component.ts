@@ -2,8 +2,9 @@ import { Component, OnInit, signal } from '@angular/core';
 import { MainService } from './main.service';
 import { catchError, of, retry, take, throwError } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { ToDoListComponent } from './to-do-list/to-do-list.component';
 
-interface ToDo {
+export interface ToDo {
   userId: number,
   id: number,
   title: string,
@@ -12,7 +13,7 @@ interface ToDo {
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule],
+  imports: [CommonModule, ToDoListComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -57,4 +58,13 @@ export class AppComponent implements OnInit {
         }
       })
   }
+
+  onToggleTodo(updatedTodo: ToDo) {
+    this.toDosList.update(todos => {
+      if (!todos) return todos;
+      return todos.map(todo => todo.id === updatedTodo.id ? { ...todo, completed: updatedTodo.completed } : todo)
+    })
+  }
+
+
 }
