@@ -1,8 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { MainService } from './main.service';
-import { catchError, of, retry, take, throwError } from 'rxjs';
+import { catchError, of, retry, Subject, take, takeUntil, throwError } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ToDoListComponent } from './to-do-list/to-do-list.component';
+import { TodoStatsComponent } from './todo-stats/todo-stats.component';
 
 export interface ToDo {
   userId: number,
@@ -13,15 +14,16 @@ export interface ToDo {
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, ToDoListComponent],
+  imports: [CommonModule, ToDoListComponent , TodoStatsComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit,OnDestroy {
 
   toDosList = signal<ToDo[] | null>(null);
   hasError = signal(true);
   errorMessage = signal('');
+  destroy$ = new Subject<void>();
   constructor(
     private mainService: MainService
   ) {
@@ -29,6 +31,10 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.mainService.toDoList$.subscribe(todos => {
+      this.toDosList.set(todos);
+      if (todos) this.hasError.set(false);
+    });
     this.getAllToDos();
   }
 
@@ -40,13 +46,10 @@ export class AppComponent implements OnInit {
           console.log('Catch Error : ', err);
           return throwError(() => err);
         }),
-        take(1)
+        take(1),
+        takeUntil(this.destroy$)
       )
       .subscribe({
-        next: (v: any) => {
-          this.toDosList.set(v);
-          this.hasError.set(false);
-        },
         error: (err) => {
           this.hasError.set(true);
           this.errorMessage.set(err.message);
@@ -60,10 +63,12 @@ export class AppComponent implements OnInit {
   }
 
   onToggleTodo(updatedTodo: ToDo) {
-    this.toDosList.update(todos => {
-      if (!todos) return todos;
-      return todos.map(todo => todo.id === updatedTodo.id ? { ...todo, completed: updatedTodo.completed } : todo)
-    })
+    this.mainService.updateToDoCompletion(updatedTodo);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
 
